@@ -11,8 +11,8 @@ import {Animated, Easing} from 'react-native';
  * IMPORTANT about the native driver:
  *   - `opacity` and `transform` CAN run on the native (UI) thread
  *     -> useNativeDriver: true. These never stutter, even if JS is busy.
- *   - layout props like `height` CANNOT use the native driver. They run on
- *     the JS thread. That is fine — see DynamicTray.tsx for why it stays
+ *   - layout props like `height` / `width` CANNOT use the native driver. They
+ *     run on the JS thread. That is fine — see DynamicTray.tsx for why it stays
  *     smooth (the children are frozen during the morph, so the only per-frame
  *     JS work is interpolating one number).
  */
@@ -24,28 +24,47 @@ export type SpringOpts = Partial<
   >
 >;
 
-/** Height morph: snappy, effectively no overshoot (overshoot on height looks like a glitch). */
+/** Height morph: fast + crisp, essentially no overshoot (overshoot on height reads as a glitch). */
 export const HEIGHT_SPRING: SpringOpts = {
-  stiffness: 560,
+  stiffness: 1000,
+  damping: 52,
+  mass: 1,
+  restDisplacementThreshold: 0.5,
+  restSpeedThreshold: 0.5,
+};
+
+/** Content scale/settle spring — a touch of life, quick to arrive. */
+export const CONTENT_SPRING: SpringOpts = {
+  stiffness: 900,
   damping: 44,
-  mass: 1,
-  restDisplacementThreshold: 0.4,
-  restSpeedThreshold: 0.4,
+  mass: 0.9,
 };
 
-/** Drag release / dismiss: a touch more give so it feels physical in the hand. */
+/** Drag release / dismiss: snappy return. */
 export const DRAG_SPRING: SpringOpts = {
-  stiffness: 420,
-  damping: 38,
+  stiffness: 700,
+  damping: 46,
   mass: 1,
 };
 
-/** Content fade timing (native-driven opacity). */
-export const FADE_IN_MS = 220;
-export const FADE_OUT_MS = 140;
+/** Footer morph (Cancel reveal + primary shrink) — width is JS-thread, keep it brisk. */
+export const FOOTER_SPRING: SpringOpts = {
+  stiffness: 900,
+  damping: 48,
+  mass: 1,
+};
 
-/** Small vertical travel used to give the forward-flow morph a sense of direction. */
-export const PUSH_TRAVEL = 14;
+/** Content fade timing (native-driven opacity). Snappy: out leads, in follows fast. */
+export const FADE_IN_MS = 150;
+export const FADE_OUT_MS = 90;
+
+/**
+ * Scale endpoints for the cross-fade:
+ *  - incoming content grows from slightly small -> full size
+ *  - outgoing content shrinks slightly as it leaves
+ */
+export const SCALE_IN_FROM = 0.94; // incoming starts here, springs to 1
+export const SCALE_OUT_TO = 0.96; // outgoing ends here as it fades
 
 export function springHeight(
   value: Animated.Value,
@@ -54,7 +73,7 @@ export function springHeight(
 ): Animated.CompositeAnimation {
   return Animated.spring(value, {
     toValue,
-    useNativeDriver: false, // height is a layout prop -> JS thread. Intentional.
+    useNativeDriver: false, // height/width are layout props -> JS thread. Intentional.
     ...opts,
   });
 }
@@ -75,7 +94,7 @@ export function fade(
 export function springTransform(
   value: Animated.Value,
   toValue: number,
-  opts: SpringOpts = DRAG_SPRING,
+  opts: SpringOpts = CONTENT_SPRING,
 ): Animated.CompositeAnimation {
   return Animated.spring(value, {
     toValue,

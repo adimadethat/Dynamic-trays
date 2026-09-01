@@ -187,8 +187,13 @@ All timing lives in `src/tray/springs.ts`:
 
 - `HEIGHT_SPRING` — the height morph. More `stiffness` = snappier; more `damping`
   = less overshoot. Height looks best with ~zero overshoot.
+- `CONTENT_SPRING` — the content scale/settle on cross-fade.
 - `FADE_IN_MS` / `FADE_OUT_MS` — content cross-fade. Out is faster than in so the
   new content leads.
-- `PUSH_TRAVEL` — how far the forward-flow content slides while fading (0 for a
-  pure dissolve).
+- `SCALE_IN_FROM` / `SCALE_OUT_TO` — the cross-fade scale endpoints: incoming
+  grows from `SCALE_IN_FROM` → 1, outgoing shrinks to `SCALE_OUT_TO` as it fades.
+- `FOOTER_SPRING` — the shared footer morph (Cancel reveal + primary shrink).
 - `DRAG_SPRING` — the drag-release / dismiss feel.
+
+The forward-flow vertical drift (`'push'` transition) is `PUSH_TRAVEL` in
+`src/tray/DynamicTray.tsx`; set it to 0 for a pure scale dissolve.

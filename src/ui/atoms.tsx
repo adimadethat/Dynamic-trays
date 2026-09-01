@@ -51,7 +51,7 @@ export function PrimaryButton({
   });
 
   return (
-    <Pressable onPress={enabled ? onPress : undefined} style={{marginTop: theme.space(4)}}>
+    <Pressable onPress={enabled ? onPress : undefined}>
       {({pressed}) => (
         <Animated.View
           style={[styles.primary, {backgroundColor}, pressed && enabled && {opacity: 0.9}]}>
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   },
   primaryText: {color: theme.color.accentText, fontSize: 16, fontWeight: '700'},
   secondary: {
-    flex: 1,
+    width: '100%',
     height: 52,
     borderRadius: theme.radius.card,
     backgroundColor: theme.color.surface,

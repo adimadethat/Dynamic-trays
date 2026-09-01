@@ -2,15 +2,7 @@ import React, {useMemo, useState} from 'react';
 import {Pressable, StyleSheet, Text, View} from 'react-native';
 import {DynamicTray, type TrayStep} from '../tray/DynamicTray';
 import {theme} from '../tray/theme';
-import {
-  Chip,
-  Divider,
-  Dot,
-  PrimaryButton,
-  SecondaryButton,
-  Sheeting,
-  TrayHeader,
-} from '../ui/atoms';
+import {Chip, Divider, Dot, Sheeting, TrayHeader} from '../ui/atoms';
 
 const CHAINS = [
   {id: 'base', name: 'Base', color: theme.color.base, glyph: 'B'},
@@ -20,12 +12,7 @@ const CHAINS = [
 ];
 const PRESETS = ['$2', '$5', '$10', '$20', '$50', 'Custom'];
 
-type StepKey =
-  | 'chains'
-  | 'amount'
-  | 'custom'
-  | 'review'
-  | 'confirm';
+type StepKey = 'chains' | 'amount' | 'custom' | 'review' | 'confirm';
 
 export function RefuelFlow({visible, onClose}: {visible: boolean; onClose: () => void}) {
   const [step, setStep] = useState<StepKey>('chains');
@@ -40,18 +27,24 @@ export function RefuelFlow({visible, onClose}: {visible: boolean; onClose: () =>
   const perChain = amount === 'Custom' ? Number(custom) : Number((amount ?? '$0').slice(1));
   const total = perChain * chosenChains.length;
 
-  const pressKey = (k: string) => {
+  const pressKey = (k: string) =>
     setCustom(prev => {
       if (k === '<') return prev.length <= 1 ? '0' : prev.slice(0, -1);
       const next = prev === '0' ? k : prev + k;
       return Number(next) > 50 ? '50' : next;
     });
-  };
 
   const steps: TrayStep[] = useMemo(
     () => [
       {
         key: 'chains',
+        footer: {
+          primary: {
+            label: 'Continue',
+            enabled: selected.length > 0,
+            onPress: () => setStep('amount'),
+          },
+        },
         render: () => (
           <Sheeting>
             <TrayHeader title="Choose Chains" onClose={onClose} />
@@ -67,16 +60,18 @@ export function RefuelFlow({visible, onClose}: {visible: boolean; onClose: () =>
                 </Pressable>
               );
             })}
-            <PrimaryButton
-              label="Continue"
-              enabled={selected.length > 0}
-              onPress={() => setStep('amount')}
-            />
           </Sheeting>
         ),
       },
       {
         key: 'amount',
+        footer: {
+          primary: {
+            label: 'Continue',
+            enabled: amount != null && amount !== 'Custom',
+            onPress: () => setStep('review'),
+          },
+        },
         render: () => (
           <Sheeting>
             <TrayHeader title="Choose Amount" onClose={onClose} />
@@ -97,16 +92,18 @@ export function RefuelFlow({visible, onClose}: {visible: boolean; onClose: () =>
                 </View>
               ))}
             </View>
-            <PrimaryButton
-              label="Continue"
-              enabled={amount != null && amount !== 'Custom'}
-              onPress={() => setStep('review')}
-            />
           </Sheeting>
         ),
       },
       {
         key: 'custom',
+        footer: {
+          primary: {
+            label: 'Continue',
+            enabled: Number(custom) > 0,
+            onPress: () => setStep('review'),
+          },
+        },
         render: () => (
           <Sheeting>
             <TrayHeader title="Custom Amount" onClose={onClose} />
@@ -115,16 +112,12 @@ export function RefuelFlow({visible, onClose}: {visible: boolean; onClose: () =>
               <Text style={styles.amountMax}>Max Amount: $50</Text>
             </View>
             <Keypad onKey={pressKey} />
-            <PrimaryButton
-              label="Continue"
-              enabled={Number(custom) > 0}
-              onPress={() => setStep('review')}
-            />
           </Sheeting>
         ),
       },
       {
         key: 'review',
+        footer: {primary: {label: 'Continue', onPress: () => setStep('confirm')}},
         render: () => (
           <Sheeting>
             <TrayHeader title="Review Details" onClose={onClose} />
@@ -160,12 +153,15 @@ export function RefuelFlow({visible, onClose}: {visible: boolean; onClose: () =>
               <View style={{flex: 1}} />
               <Text style={styles.totalText}>≈ 0.00{total} ETH  ${total}</Text>
             </View>
-            <PrimaryButton label="Continue" onPress={() => setStep('confirm')} />
           </Sheeting>
         ),
       },
       {
         key: 'confirm',
+        footer: {
+          secondary: {label: 'Cancel', onPress: () => setStep('review')},
+          primary: {label: 'Confirm', icon: '⛨', onPress: onClose},
+        },
         render: () => (
           <Sheeting>
             <View style={styles.confirmHead}>
@@ -183,13 +179,6 @@ export function RefuelFlow({visible, onClose}: {visible: boolean; onClose: () =>
             <View style={styles.feeRow}>
               <Text style={styles.feeText}>${(total * 0.0375).toFixed(2)}{'\n'}Fee Estimate</Text>
               <Text style={styles.feeText}>Normal{'\n'}~45 Secs</Text>
-            </View>
-            <View style={styles.twoBtn}>
-              <SecondaryButton label="Cancel" onPress={() => setStep('review')} />
-              <View style={{width: theme.space(3)}} />
-              <View style={{flex: 1}}>
-                <PrimaryButton label="Confirm" icon="⛨" onPress={onClose} />
-              </View>
             </View>
           </Sheeting>
         ),
@@ -261,12 +250,7 @@ const styles = StyleSheet.create({
   amountBig: {fontSize: 56, fontWeight: '800', color: theme.color.text},
   amountMax: {fontSize: theme.font.small, color: theme.color.textDim, marginTop: theme.space(1)},
   keypad: {flexDirection: 'row', flexWrap: 'wrap'},
-  keyCell: {
-    width: '33.33%',
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  keyCell: {width: '33.33%', height: 56, alignItems: 'center', justifyContent: 'center'},
   keyPressed: {backgroundColor: theme.color.surface, borderRadius: 12},
   keyText: {fontSize: 24, fontWeight: '500', color: theme.color.text},
   reviewTop: {
@@ -282,11 +266,7 @@ const styles = StyleSheet.create({
   reviewTag: {fontSize: 15, fontWeight: '700', color: theme.color.text},
   benji: {flexDirection: 'row', alignItems: 'center', gap: theme.space(2)},
   benjiText: {fontSize: 15, fontWeight: '600', color: theme.color.text},
-  amountsHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: theme.space(1),
-  },
+  amountsHead: {flexDirection: 'row', justifyContent: 'space-between', marginBottom: theme.space(1)},
   amountsLabel: {fontSize: theme.font.small, color: theme.color.textDim, fontWeight: '600'},
   editLink: {fontSize: theme.font.small, color: theme.color.accent, fontWeight: '700'},
   reviewRow: {
@@ -326,5 +306,4 @@ const styles = StyleSheet.create({
   },
   feeRow: {flexDirection: 'row', justifyContent: 'space-between', marginBottom: theme.space(3)},
   feeText: {fontSize: theme.font.small, color: theme.color.textDim, fontWeight: '600'},
-  twoBtn: {flexDirection: 'row', marginTop: theme.space(2)},
 });

@@ -1,8 +1,8 @@
 import React, {useMemo, useState} from 'react';
 import {Pressable, StyleSheet, Text, View} from 'react-native';
-import {DynamicTray, type TrayStep} from '../tray/DynamicTray';
+import {DynamicTray, type TrayFooter, type TrayStep} from '../tray/DynamicTray';
 import {theme} from '../tray/theme';
-import {PrimaryButton, SecondaryButton, Sheeting, TrayHeader} from '../ui/atoms';
+import {Sheeting, TrayHeader} from '../ui/atoms';
 
 type StepKey = 'options' | 'privateKey' | 'recovery';
 
@@ -46,15 +46,13 @@ export function OptionsFlow({visible, onClose}: {visible: boolean; onClose: () =
             <Text style={styles.bulletText}>{b}</Text>
           </View>
         ))}
-        <View style={styles.twoBtn}>
-          <SecondaryButton label="Cancel" onPress={() => setStep('options')} />
-          <View style={{width: theme.space(3)}} />
-          <View style={{flex: 1}}>
-            <PrimaryButton label="Reveal" icon="⛶" onPress={onClose} />
-          </View>
-        </View>
       </Sheeting>
     );
+  };
+
+  const infoFooter: TrayFooter = {
+    secondary: {label: 'Cancel', onPress: () => setStep('options')},
+    primary: {label: 'Reveal', icon: '⛶', onPress: onClose},
   };
 
   const steps: TrayStep[] = useMemo(
@@ -66,16 +64,14 @@ export function OptionsFlow({visible, onClose}: {visible: boolean; onClose: () =
             <TrayHeader title="Options" onClose={onClose} />
             <OptionRow icon="🗝" label="View Private Key" onPress={() => setStep('privateKey')} />
             <OptionRow icon="📋" label="View Recovery Phrase" onPress={() => setStep('recovery')} />
-            <Pressable
-              style={[styles.optRow, styles.dangerRow]}
-              onPress={onClose}>
+            <Pressable style={[styles.optRow, styles.dangerRow]} onPress={onClose}>
               <Text style={styles.dangerText}>⚠  Remove Wallet</Text>
             </Pressable>
           </Sheeting>
         ),
       },
-      {key: 'privateKey', render: () => infoPanel('privateKey')},
-      {key: 'recovery', render: () => infoPanel('recovery')},
+      {key: 'privateKey', footer: infoFooter, render: () => infoPanel('privateKey')},
+      {key: 'recovery', footer: infoFooter, render: () => infoPanel('recovery')},
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [step],
@@ -86,7 +82,7 @@ export function OptionsFlow({visible, onClose}: {visible: boolean; onClose: () =
       visible={visible}
       steps={steps}
       activeKey={step}
-      transition="fade" // symmetric cross-dissolve, not a forward push
+      transition="fade"
       onRequestClose={onClose}
     />
   );
@@ -125,11 +121,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: theme.space(1),
   },
-  blurb: {
-    fontSize: theme.font.body,
-    color: theme.color.textDim,
-    lineHeight: 21,
-  },
+  blurb: {fontSize: theme.font.body, color: theme.color.textDim, lineHeight: 21},
   bulletRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -138,5 +130,4 @@ const styles = StyleSheet.create({
   },
   bulletMark: {fontSize: 18, color: theme.color.textDim},
   bulletText: {fontSize: 15, color: theme.color.text, fontWeight: '500'},
-  twoBtn: {flexDirection: 'row', marginTop: theme.space(4)},
 });
