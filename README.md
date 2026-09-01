@@ -112,33 +112,72 @@ measures the new step and springs to it.
 
 ## Run it
 
-This repo is the **source for the tray system** (the `src/` tree, `App.tsx`,
-config). It has no `ios/` / `android/` native folders checked in, so pick one:
+This is a complete bare React Native 0.75.4 app — the `ios/` and `android/`
+native projects are included. Everything below runs **on your computer**, in a
+terminal, in the project folder. Nothing is installed on the phone except (for a
+device build) trusting the developer certificate once.
 
-**Option A — drop into a fresh bare RN app**
+### One-time tools (macOS)
+
+- **Node 18+** — `brew install node`
+- **Watchman** — `brew install watchman`
+- **Xcode** (from the App Store) + its command line tools — `xcode-select --install`
+- **CocoaPods** — `sudo gem install cocoapods` (or `brew install cocoapods`)
+
+### Get the code + install JS deps
 
 ```bash
-npx @react-native-community/cli init DynamicTraysApp   # RN 0.75+
-# copy App.tsx and src/ into the new app, then:
-cd DynamicTraysApp
+git clone https://github.com/adimadethat/Dynamic-trays.git
+cd Dynamic-trays
+git checkout claude/dynamic-trays-react-native-m13pfj
 npm install
-npm run ios      # or: npm run android
 ```
 
-**Option B — generate native folders in place**
+### Install iOS native pods (first time, and after dep changes)
 
 ```bash
-npm install
-npx @react-native-community/cli init DynamicTrays --directory . --skip-install
-npm run ios
+cd ios
+pod install          # or: bundle install && bundle exec pod install
+cd ..
 ```
 
-No extra pods or gradle deps are required — the tray system is pure JS/TS on top
-of React Native core.
+### Run on the iPhone Simulator (no cable — easiest first check)
 
-> Note: this was type-checked with `npm run tsc` (passes clean). It was not built
-> against a simulator in this environment — run it on your machine to feel the
-> springs.
+```bash
+npm run ios          # boots a simulator and installs the app
+```
+
+### Run on your physical iPhone over USB
+
+1. Plug the iPhone into the Mac with a cable. Unlock it and tap **Trust** if
+   prompted.
+2. Open the workspace in Xcode: `open ios/DynamicTrays.xcworkspace`
+   (the `.xcworkspace`, **not** the `.xcodeproj` — pods live in the workspace).
+3. In Xcode: select the **DynamicTrays** target → **Signing & Capabilities**:
+   - Check **Automatically manage signing**.
+   - **Team**: pick your Apple ID (add it under Xcode → Settings → Accounts if
+     it's not listed — a free Apple ID works).
+   - **Bundle Identifier**: change it to something unique, e.g.
+     `com.yourname.dynamictrays` (the default `org.reactjs...` can't be signed by
+     you).
+4. At the top of Xcode, choose your iPhone from the device dropdown, then press
+   **▶ Run** (or `npm run ios -- --device "Your iPhone Name"` from the terminal).
+5. First launch on the device: iOS blocks untrusted developer apps. On the phone
+   go to **Settings → General → VPN & Device Management → [your Apple ID] →
+   Trust**, then reopen the app.
+
+The Metro bundler (the JS server) starts automatically. If it doesn't, run
+`npm start` in a second terminal tab. Shake the phone (or press `d` in Metro) for
+the dev menu; edits to the JS reload live.
+
+> Prefer no cables at all? Because the tray code is 100% core React Native, it
+> also runs unchanged in **Expo Go** (scan a QR, no Xcode). Say the word and I'll
+> add a small Expo harness.
+
+> This was type-checked with `npm run tsc` (passes clean). The native projects
+> are the stock RN 0.75.4 template, so `pod install` + Xcode build the standard
+> way — but they were generated, not built against a simulator in this
+> environment, so the first `pod install`/build happens on your Mac.
 
 ---
 
