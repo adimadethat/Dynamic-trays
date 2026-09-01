@@ -50,8 +50,10 @@ type Props = {
 
 type Vals = {opacity: Animated.Value; scale: Animated.Value; ty: Animated.Value};
 
-const MARGIN_H = 8;
-const MARGIN_B = 16;
+const MARGIN_H = 12;
+// Bottom gap must clear the home-indicator / curved-screen corner so the sheet's
+// rounded bottom corners aren't sliced off by the physical display edge.
+const MARGIN_B = 40;
 const PUSH_TRAVEL = 10;
 const FOOTER_H = 64; // 52 button + 12 top padding
 const CANCEL_W = 104;
