@@ -1,0 +1,21 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/HostGrotesk-Bold.ttf",
+      "sha1": "e3fe301aacc6a4c96b68a2eb5df2c7f69545b658"
+    },
+    {
+      "path": "assets/fonts/HostGrotesk-Medium.ttf",
+      "sha1": "747e55edda48d0f16413c8cfc8989981e162c28c"
+    },
+    {
+      "path": "assets/fonts/HostGrotesk-Regular.ttf",
+      "sha1": "38f10241db8d51769fdc1e3196016ddf7b489022"
+    },
+    {
+      "path": "assets/fonts/HostGrotesk-SemiBold.ttf",
+      "sha1": "d1ec69982451abdafadc4860c365ade852ac5ff3"
+    }
+  ]
+}

@@ -1,63 +1,69 @@
 import React, {useMemo, useState} from 'react';
 import {Keyboard, Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
+import {
+  ArrowsMerge,
+  CaretDoubleRight,
+  CaretRight,
+  FolderOpen,
+  FolderPlus,
+  Trash,
+  X,
+  type IconProps,
+} from 'phosphor-react-native';
 import {DynamicTray, type TrayStep} from '../tray/DynamicTray';
 import {Sheeting} from '../ui/atoms';
+import {font, tw} from '../tray/tailwind';
 
 /**
- * SOT "transactions selected" action sheet (Figma node 25991:71744).
- * Uses the SOT design tokens directly (zinc greys + #2B7FFF blue), not the
- * Family palette, so it matches the source screen.
+ * SOT "transactions selected" action sheet + "New folder" input.
+ * Figma nodes 25991:71744 (actions) and 25991:72622 (input).
  *
- * The `New folder` row morphs the tray into a `Create new folder` naming step —
- * a small forward-flow to exercise the engine (and to earn the entry-point name).
+ * Uses the real design system: Tailwind (zinc/blue/red) colors, Host Grotesk
+ * type, and Phosphor icons.
  */
-
-const C = {
-  text900: '#18181B',
-  text500: '#71717B',
-  text400: '#9F9FA9',
-  surface100: '#F4F4F5',
-  border: '#DFDFDF',
-  primary500: '#2B7FFF',
-  blue100: '#DBEAFE',
-  red600: '#E7000B',
-  red50: '#FEF2F2',
-  white: '#FFFFFF',
-};
 
 const SELECTED_COUNT = 4;
 
 type StepKey = 'actions' | 'newFolder';
 
+type ActionRow = {
+  key: string;
+  Icon: React.ComponentType<IconProps>;
+  title: string;
+  subtitle: string;
+  danger?: boolean;
+  onPress: () => void;
+};
+
 export function CreateFolderFlow({visible, onClose}: {visible: boolean; onClose: () => void}) {
   const [step, setStep] = useState<StepKey>('actions');
   const [folderName, setFolderName] = useState('');
 
-  const actions = [
+  const actions: ActionRow[] = [
     {
       key: 'new',
-      icon: '🗂',
+      Icon: FolderPlus,
       title: 'New folder',
       subtitle: 'Create new folder',
       onPress: () => setStep('newFolder'),
     },
     {
       key: 'move',
-      icon: '📁',
+      Icon: FolderOpen,
       title: 'Move to folder',
       subtitle: 'Chose from existing folder',
       onPress: onClose,
     },
     {
       key: 'merge',
-      icon: '⤵',
+      Icon: ArrowsMerge,
       title: 'Merge as one transaction',
       subtitle: 'Total value of $ 1,414.21',
       onPress: onClose,
     },
     {
       key: 'delete',
-      icon: '🗑',
+      Icon: Trash,
       title: `Delete all ${SELECTED_COUNT} transactions`,
       subtitle: 'This is irreversible.',
       danger: true,
@@ -76,24 +82,22 @@ export function CreateFolderFlow({visible, onClose}: {visible: boolean; onClose:
                 <Text style={styles.title}>{SELECTED_COUNT} transactions selected</Text>
                 <Text style={styles.subtitle}>Swipe down to select more</Text>
               </View>
-              <Pressable onPress={onClose} hitSlop={10} style={styles.closeBtn}>
-                <Text style={styles.closeGlyph}>✕</Text>
-              </Pressable>
+              <CloseButton onPress={onClose} />
             </View>
 
             {actions.map(a => (
               <Pressable
                 key={a.key}
                 onPress={a.onPress}
-                style={({pressed}) => [styles.row, pressed && {backgroundColor: C.surface100}]}>
-                <View style={[styles.iconBox, a.danger && {backgroundColor: C.red50}]}>
-                  <Text style={styles.iconGlyph}>{a.icon}</Text>
+                style={({pressed}) => [styles.row, pressed && {backgroundColor: tw.zinc[50]}]}>
+                <View style={[styles.iconBox, a.danger && {backgroundColor: tw.red[50]}]}>
+                  <a.Icon size={20} color={a.danger ? tw.red[600] : tw.zinc[700]} weight="regular" />
                 </View>
                 <View style={{flex: 1}}>
-                  <Text style={styles.rowTitle}>{a.title}</Text>
+                  <Text style={[styles.rowTitle, a.danger && {color: tw.red[600]}]}>{a.title}</Text>
                   <Text style={styles.rowSub}>{a.subtitle}</Text>
                 </View>
-                <Text style={styles.chevron}>›</Text>
+                <CaretRight size={18} color={tw.zinc[400]} weight="bold" />
               </Pressable>
             ))}
 
@@ -105,7 +109,7 @@ export function CreateFolderFlow({visible, onClose}: {visible: boolean; onClose:
 
             <View style={styles.bottomRow}>
               <Pressable onPress={onClose} style={styles.circleBtn}>
-                <Text style={styles.circleGlyph}>»</Text>
+                <CaretDoubleRight size={22} color={tw.blue[500]} weight="bold" />
               </Pressable>
               <Pressable onPress={onClose} style={styles.submitBtn}>
                 <Text style={styles.submitText}>Submit for approval</Text>
@@ -133,9 +137,7 @@ export function CreateFolderFlow({visible, onClose}: {visible: boolean; onClose:
                   <Text style={styles.title}>New folder</Text>
                   <Text style={styles.subtitle}>This creates a new folder</Text>
                 </View>
-                <Pressable onPress={onClose} hitSlop={10} style={styles.closeBtn}>
-                  <Text style={styles.closeGlyph}>✕</Text>
-                </Pressable>
+                <CloseButton onPress={onClose} />
               </View>
 
               <View style={styles.inputWrap}>
@@ -147,9 +149,7 @@ export function CreateFolderFlow({visible, onClose}: {visible: boolean; onClose:
                 />
                 {folderName.length === 0 ? (
                   <View style={styles.placeholderOverlay} pointerEvents="none">
-                    <Text style={styles.placeholderText}>
-                      Dubai trip, Subscriptions, Bills etc.
-                    </Text>
+                    <Text style={styles.placeholderText}>Dubai trip, Subscriptions, Bills etc.</Text>
                     <Text style={styles.asterisk}>*</Text>
                   </View>
                 ) : null}
@@ -188,19 +188,26 @@ export function CreateFolderFlow({visible, onClose}: {visible: boolean; onClose:
   );
 }
 
+function CloseButton({onPress}: {onPress: () => void}) {
+  return (
+    <Pressable onPress={onPress} hitSlop={10} style={styles.closeBtn}>
+      <X size={15} color={tw.zinc[500]} weight="bold" />
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   headerBlock: {flexDirection: 'row', alignItems: 'flex-start', paddingBottom: 16},
-  title: {fontSize: 18, fontWeight: '600', color: C.text900},
-  subtitle: {fontSize: 14, color: C.text500, marginTop: 2},
+  title: {fontFamily: font.semibold, fontSize: 18, color: tw.zinc[900]},
+  subtitle: {fontFamily: font.regular, fontSize: 14, color: tw.zinc[500], marginTop: 2},
   closeBtn: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: C.surface100,
+    backgroundColor: tw.zinc[100],
     alignItems: 'center',
     justifyContent: 'center',
   },
-  closeGlyph: {fontSize: 13, color: C.text500, fontWeight: '600'},
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -213,48 +220,46 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: C.surface100,
+    backgroundColor: tw.zinc[100],
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconGlyph: {fontSize: 18},
-  rowTitle: {fontSize: 16, fontWeight: '600', color: C.text900},
-  rowSub: {fontSize: 14, color: C.text500, marginTop: 1},
-  chevron: {fontSize: 22, color: C.text400, fontWeight: '400'},
+  rowTitle: {fontFamily: font.semibold, fontSize: 16, color: tw.zinc[900]},
+  rowSub: {fontFamily: font.regular, fontSize: 14, color: tw.zinc[500], marginTop: 1},
   orRow: {flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 14},
-  orLine: {flex: 1, height: 1, backgroundColor: C.border},
-  orText: {fontSize: 14, color: C.text400},
+  orLine: {flex: 1, height: 1, backgroundColor: tw.zinc[200]},
+  orText: {fontFamily: font.regular, fontSize: 14, color: tw.zinc[400]},
   bottomRow: {flexDirection: 'row', alignItems: 'center', gap: 12},
   circleBtn: {
     width: 56,
     height: 56,
     borderRadius: 28,
     borderWidth: 2,
-    borderColor: C.primary500,
-    backgroundColor: C.white,
+    borderColor: tw.blue[500],
+    backgroundColor: tw.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  circleGlyph: {fontSize: 22, color: C.primary500, fontWeight: '800'},
   submitBtn: {
     flex: 1,
     height: 56,
     borderRadius: 28,
-    backgroundColor: C.blue100,
+    backgroundColor: tw.blue[100],
     alignItems: 'center',
     justifyContent: 'center',
   },
-  submitText: {fontSize: 16, fontWeight: '600', color: C.primary500},
+  submitText: {fontFamily: font.semibold, fontSize: 16, color: tw.blue[500]},
   inputWrap: {marginTop: 4, justifyContent: 'center'},
   input: {
     height: 56,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: C.primary500,
-    backgroundColor: C.white,
+    borderColor: tw.blue[500],
+    backgroundColor: tw.white,
     paddingHorizontal: 16,
+    fontFamily: font.regular,
     fontSize: 16,
-    color: C.text900,
+    color: tw.zinc[900],
   },
   placeholderOverlay: {
     position: 'absolute',
@@ -263,28 +268,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  placeholderText: {fontSize: 16, color: C.text400},
-  asterisk: {fontSize: 16, color: C.red600, marginLeft: 1},
-  hint: {fontSize: 14, color: C.text500, marginTop: 8},
+  placeholderText: {fontFamily: font.regular, fontSize: 16, color: tw.zinc[400]},
+  asterisk: {fontFamily: font.regular, fontSize: 16, color: tw.red[600], marginLeft: 1},
+  hint: {fontFamily: font.regular, fontSize: 14, color: tw.zinc[500], marginTop: 8},
   folderBtnRow: {flexDirection: 'row', gap: 12, marginTop: 24},
   cancelBtn: {
     flex: 1,
     height: 56,
     borderRadius: 28,
-    backgroundColor: C.surface100,
+    backgroundColor: tw.zinc[100],
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cancelText: {fontSize: 16, fontWeight: '600', color: C.text900},
+  cancelText: {fontFamily: font.semibold, fontSize: 16, color: tw.zinc[900]},
   createBtn: {
     flex: 1.6,
     height: 56,
     borderRadius: 28,
-    backgroundColor: C.blue100,
+    backgroundColor: tw.blue[100],
     alignItems: 'center',
     justifyContent: 'center',
   },
-  createBtnOn: {backgroundColor: C.primary500},
-  createText: {fontSize: 16, fontWeight: '600', color: C.primary500},
-  createTextOn: {color: C.white},
+  createBtnOn: {backgroundColor: tw.blue[500]},
+  createText: {fontFamily: font.semibold, fontSize: 16, color: tw.blue[500]},
+  createTextOn: {color: tw.white},
 });
