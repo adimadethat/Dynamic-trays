@@ -1,0 +1,19 @@
+# deps
+node_modules/
+
+# metro / build
+.metro-health-check*
+/dist/
+*.tsbuildinfo
+
+# native build artifacts (if you add ios/ android/ via react-native init)
+ios/Pods/
+ios/build/
+android/.gradle/
+android/app/build/
+*.hprof
+
+# logs / os
+npm-debug.log*
+yarn-error.log*
+.DS_Store

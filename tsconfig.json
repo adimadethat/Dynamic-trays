@@ -1,0 +1,16 @@
+{
+  "extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-native",
+    "types": [],
+    "strict": true,
+    "noUnusedLocals": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@tray/*": ["src/tray/*"],
+      "@ui/*": ["src/ui/*"]
+    }
+  },
+  "include": ["src", "App.tsx", "index.js"]
+}
