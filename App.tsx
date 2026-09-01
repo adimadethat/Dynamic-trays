@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import {RefuelFlow} from './src/flows/RefuelFlow';
 import {OptionsFlow} from './src/flows/OptionsFlow';
+import {CreateFolderFlow} from './src/flows/CreateFolderFlow';
 import {theme} from './src/tray/theme';
 
 const SETTINGS = [
@@ -24,6 +25,7 @@ const SETTINGS = [
 export default function App() {
   const [refuel, setRefuel] = useState(false);
   const [options, setOptions] = useState(false);
+  const [folder, setFolder] = useState(false);
 
   return (
     <SafeAreaView style={styles.root}>
@@ -41,6 +43,10 @@ export default function App() {
             <Text style={styles.launchTitle}>🔑 Wallet Options</Text>
             <Text style={styles.launchSub}>Info reveal · symmetric cross-dissolve</Text>
           </TouchableOpacity>
+          <TouchableOpacity style={styles.launch} onPress={() => setFolder(true)}>
+            <Text style={styles.launchTitle}>🗂 Create new folder</Text>
+            <Text style={styles.launchSub}>SOT action sheet · morphs to a naming step</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.card}>
@@ -56,6 +62,7 @@ export default function App() {
 
       <RefuelFlow visible={refuel} onClose={() => setRefuel(false)} />
       <OptionsFlow visible={options} onClose={() => setOptions(false)} />
+      <CreateFolderFlow visible={folder} onClose={() => setFolder(false)} />
     </SafeAreaView>
   );
 }
