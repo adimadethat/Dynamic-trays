@@ -1,6 +1,8 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
   Animated,
+  Keyboard,
+  Platform,
   PanResponder,
   Pressable,
   StyleSheet,
@@ -91,6 +93,9 @@ export function DynamicTray({
 
   // --- Whole-sheet presentation (slide up / drag to dismiss) ---------------
   const sheetTY = useRef(new Animated.Value(screenH)).current;
+  const keyboardOffset = useRef(new Animated.Value(0)).current;
+  // Combined vertical transform: drag/present offset + keyboard lift (both native).
+  const sheetTranslate = useRef(Animated.add(sheetTY, keyboardOffset)).current;
   const backdrop = useRef(new Animated.Value(0)).current;
   const sheetHeightRef = useRef(screenH);
   const [rendered, setRendered] = useState(visible);
@@ -146,6 +151,7 @@ export function DynamicTray({
         fade(backdrop, 1, FADE_IN_MS),
       ]).start();
     } else if (rendered) {
+      Keyboard.dismiss();
       Animated.parallel([
         springTransform(sheetTY, sheetHeightRef.current + MARGIN_B + 40, DRAG_SPRING),
         fade(backdrop, 0, FADE_OUT_MS),
@@ -155,6 +161,34 @@ export function DynamicTray({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
+
+  // ── Lift the sheet above the keyboard (so text inputs stay visible) ─────
+  useEffect(() => {
+    const showEvt = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvt = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const onShow = (e: {endCoordinates?: {height: number}; duration?: number}) => {
+      const h = e.endCoordinates?.height ?? 0;
+      Animated.timing(keyboardOffset, {
+        toValue: -Math.max(0, h - MARGIN_B + 8),
+        duration: e.duration || 250,
+        useNativeDriver: true,
+      }).start();
+    };
+    const onHide = (e: {duration?: number}) => {
+      Animated.timing(keyboardOffset, {
+        toValue: 0,
+        duration: e?.duration || 200,
+        useNativeDriver: true,
+      }).start();
+    };
+    const s = Keyboard.addListener(showEvt, onShow);
+    const h = Keyboard.addListener(hideEvt, onHide);
+    return () => {
+      s.remove();
+      h.remove();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Morph footer when the active step's action row changes ─────────────
   useEffect(() => {
@@ -181,9 +215,10 @@ export function DynamicTray({
       keys.includes(activeKey) ? keys : [...keys.filter(k => k !== activeKey), activeKey],
     );
 
+    // Always start the morph from the incoming step's fresh onLayout (it fires
+    // next frame on (re)mount). Starting from a cached height and then
+    // re-measuring can double-spring the height and stutter.
     pendingFromRef.current = from;
-    const cached = heightsRef.current.get(activeKey);
-    if (cached != null) startMorph(from, activeKey, cached);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeKey, transition]);
 
@@ -271,7 +306,7 @@ export function DynamicTray({
       </Animated.View>
 
       <Animated.View
-        style={[styles.sheet, {transform: [{translateY: sheetTY}]}]}
+        style={[styles.sheet, {transform: [{translateY: sheetTranslate}]}]}
         onLayout={e => (sheetHeightRef.current = e.nativeEvent.layout.height)}>
         <View {...pan.panHandlers} style={styles.grabZone}>
           <View style={styles.grabber} />

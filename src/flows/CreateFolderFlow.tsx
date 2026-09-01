@@ -1,7 +1,7 @@
 import React, {useMemo, useState} from 'react';
-import {Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
+import {Keyboard, Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
 import {DynamicTray, type TrayStep} from '../tray/DynamicTray';
-import {Sheeting, TrayHeader} from '../ui/atoms';
+import {Sheeting} from '../ui/atoms';
 
 /**
  * SOT "transactions selected" action sheet (Figma node 25991:71744).
@@ -116,33 +116,61 @@ export function CreateFolderFlow({visible, onClose}: {visible: boolean; onClose:
       },
       {
         key: 'newFolder',
-        footer: {
-          secondary: {label: 'Cancel', onPress: () => setStep('actions')},
-          primary: {
-            label: 'Create folder',
-            enabled: folderName.trim().length > 0,
-            onPress: onClose,
-          },
+        render: () => {
+          const canCreate = folderName.trim().length > 0;
+          const cancel = () => {
+            Keyboard.dismiss();
+            setStep('actions');
+          };
+          const create = () => {
+            Keyboard.dismiss();
+            onClose();
+          };
+          return (
+            <Sheeting>
+              <View style={styles.headerBlock}>
+                <View style={{flex: 1}}>
+                  <Text style={styles.title}>New folder</Text>
+                  <Text style={styles.subtitle}>This creates a new folder</Text>
+                </View>
+                <Pressable onPress={onClose} hitSlop={10} style={styles.closeBtn}>
+                  <Text style={styles.closeGlyph}>✕</Text>
+                </Pressable>
+              </View>
+
+              <View style={styles.inputWrap}>
+                <TextInput
+                  value={folderName}
+                  onChangeText={setFolderName}
+                  autoFocus
+                  style={styles.input}
+                />
+                {folderName.length === 0 ? (
+                  <View style={styles.placeholderOverlay} pointerEvents="none">
+                    <Text style={styles.placeholderText}>
+                      Dubai trip, Subscriptions, Bills etc.
+                    </Text>
+                    <Text style={styles.asterisk}>*</Text>
+                  </View>
+                ) : null}
+              </View>
+              <Text style={styles.hint}>This is a hint text to help user.</Text>
+
+              <View style={styles.folderBtnRow}>
+                <Pressable onPress={cancel} style={styles.cancelBtn}>
+                  <Text style={styles.cancelText}>Cancel</Text>
+                </Pressable>
+                <Pressable
+                  onPress={canCreate ? create : undefined}
+                  style={[styles.createBtn, canCreate && styles.createBtnOn]}>
+                  <Text style={[styles.createText, canCreate && styles.createTextOn]}>
+                    Create folder
+                  </Text>
+                </Pressable>
+              </View>
+            </Sheeting>
+          );
         },
-        render: () => (
-          <Sheeting>
-            <View style={styles.newFolderIcon}>
-              <Text style={{fontSize: 20}}>🗂</Text>
-            </View>
-            <TrayHeader title="Create new folder" onClose={onClose} />
-            <Text style={styles.subtitle}>
-              Name a folder for these {SELECTED_COUNT} transactions.
-            </Text>
-            <TextInput
-              value={folderName}
-              onChangeText={setFolderName}
-              placeholder="Folder name"
-              placeholderTextColor={C.text400}
-              autoFocus
-              style={styles.input}
-            />
-          </Sheeting>
-        ),
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -217,22 +245,46 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   submitText: {fontSize: 16, fontWeight: '600', color: C.primary500},
-  newFolderIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: C.surface100,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
+  inputWrap: {marginTop: 4, justifyContent: 'center'},
   input: {
-    marginTop: 16,
-    height: 52,
+    height: 56,
     borderRadius: 12,
-    backgroundColor: C.surface100,
+    borderWidth: 1.5,
+    borderColor: C.primary500,
+    backgroundColor: C.white,
     paddingHorizontal: 16,
     fontSize: 16,
     color: C.text900,
   },
+  placeholderOverlay: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  placeholderText: {fontSize: 16, color: C.text400},
+  asterisk: {fontSize: 16, color: C.red600, marginLeft: 1},
+  hint: {fontSize: 14, color: C.text500, marginTop: 8},
+  folderBtnRow: {flexDirection: 'row', gap: 12, marginTop: 24},
+  cancelBtn: {
+    flex: 1,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: C.surface100,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelText: {fontSize: 16, fontWeight: '600', color: C.text900},
+  createBtn: {
+    flex: 1.6,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: C.blue100,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  createBtnOn: {backgroundColor: C.primary500},
+  createText: {fontSize: 16, fontWeight: '600', color: C.primary500},
+  createTextOn: {color: C.white},
 });
