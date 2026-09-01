@@ -15,6 +15,7 @@ import {
   DRAG_SPRING,
   FOOTER_SPRING,
   fade,
+  fadeJS,
   FADE_IN_MS,
   FADE_OUT_MS,
   SCALE_IN_FROM,
@@ -157,7 +158,8 @@ export function DynamicTray({
   useEffect(() => {
     Animated.parallel([
       springHeight(footerH, hasFooter ? FOOTER_H : 0, FOOTER_SPRING),
-      fade(footerOpacity, hasFooter ? 1 : 0, hasFooter ? FADE_IN_MS : FADE_OUT_MS),
+      // JS-driven: this opacity shares a node with the footer's animated height.
+      fadeJS(footerOpacity, hasFooter ? 1 : 0, hasFooter ? FADE_IN_MS : FADE_OUT_MS),
       springHeight(secondaryProgress, hasSecondary ? 1 : 0, FOOTER_SPRING),
     ]).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps

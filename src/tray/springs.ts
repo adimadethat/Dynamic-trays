@@ -91,6 +91,25 @@ export function fade(
   });
 }
 
+/**
+ * JS-thread fade. Use when the opacity lives on the SAME Animated.View as a
+ * layout prop (height/width): an animated style node can't be half native and
+ * half JS — making the opacity native would try to nativize the height too and
+ * throw "Style property 'height' is not supported by native animated module".
+ */
+export function fadeJS(
+  value: Animated.Value,
+  toValue: number,
+  durationMs: number,
+): Animated.CompositeAnimation {
+  return Animated.timing(value, {
+    toValue,
+    duration: durationMs,
+    easing: Easing.out(Easing.cubic),
+    useNativeDriver: false,
+  });
+}
+
 export function springTransform(
   value: Animated.Value,
   toValue: number,
